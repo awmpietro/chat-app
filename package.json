@@ -1,10 +1,9 @@
 {
   "name": "chat-app",
   "version": "1.0.0",
-  "description": "This is a chat app for testing purposes",
+  "description": "This is a chat app for testing purposes at Jobsity",
   "main": "./src/app.js",
-  "author": "awmpietro <awmpietro@gmail.com>",
-  "license": "MIT",
+  "author": "Arthur Mastropietro <awmpietro@gmail.com>",
   "private": false,
   "scripts": {
     "test": "nyc --reporter=html mocha --timeout 20000 --recursive --exit",

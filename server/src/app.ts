@@ -12,7 +12,13 @@ class App {
   constructor() {
     this.app = express();
     this.server = createServer(this.app);
-    this.io = socketIo(this.server);
+    this.io = socketIo(this.server, {
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
+    });
     this.routesInit();
     this.socketInit();
   }
@@ -23,19 +29,22 @@ class App {
     });
   }
 
-  private socketInit(): void {
+  socketInit = (): void => {
     this.io.on('connection', (socket: any) => {
       console.log('a user connected');
 
-      socket.on('chat message', function (msg: any) {
-        socket.emit('newMessage', msg);
+      socket.emit('newMessage', 'Welcome to Chat App'); // the client
+      socket.broadcast.emit('message', 'An user has joined the chat'); // evrybody but the client
+
+      socket.on('message', (msg: any) => {
+        this.io.emit('newMessage', msg.msg); // everybody
       });
 
       socket.on('disconnect', () => {
         console.log('user disconnected');
       });
     });
-  }
+  };
 }
 
 const app = new App();

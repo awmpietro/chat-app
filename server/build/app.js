@@ -14,7 +14,7 @@ var App = /** @class */ (function () {
     }
     App.prototype.routesInit = function () {
         this.app.route('/').get(function (req, res) {
-            res.sendFile(__dirname + '/views/index.html');
+            res.json('Working');
         });
     };
     App.prototype.socketInit = function () {

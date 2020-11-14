@@ -166,7 +166,8 @@ a {
   margin-bottom: 5px;
 }
 
-.join-main input[type="text"] {
+.join-main input[type="email"],
+.join-main input[type="password"] {
   font-size: 16px;
   padding: 5px;
   height: 40px;
@@ -183,6 +184,16 @@ a {
 .join-main .btn {
   margin-top: 20px;
   width: 100%;
+}
+
+.join-main .sign-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.join-main .sign-link a {
+  color: var(--light-color);
+  text-decoration: underline;
 }
 
 @media (max-width: 700px) {

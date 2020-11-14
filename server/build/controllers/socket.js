@@ -38,16 +38,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var socketIo = require('socket.io');
 var moment = require('moment');
 var axios = require('axios');
-var csv = require('csv-parser');
-var fs = require('fs');
 var AppUsers = require('./users');
 var Socket = /** @class */ (function () {
     function Socket(server) {
         var _this = this;
         this.chatBotName = 'Chat App';
-        this.checkStock = function (message) {
-            return message.startsWith('/stock=');
-        };
         this.joinRoom = function (socket, userName, userRoom) {
             var user = _this.users.userJoin(socket.id, userName, userRoom);
             socket.join(user.userRoom);
@@ -71,52 +66,54 @@ var Socket = /** @class */ (function () {
                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
             }); // everybody but the client
         };
-        this.message = function (socket, msg) {
-            var user = _this.users.getUser(socket.id);
-            if (_this.checkStock(msg.msg)) {
-                var fmtMsg_1 = msg.msg.split('=');
-                var url = "https://stooq.com/q/l/?s=" + fmtMsg_1[1] + "&f=sd2t2ohlcv&h&e=csv";
-                var results_1 = [];
-                axios
-                    .get(url, {
-                    method: 'get',
-                    responseType: 'stream',
-                })
-                    .then(function (res) {
-                    res.data.pipe(fs.createWriteStream('file.csv'));
-                    fs.createReadStream('file.csv')
-                        .pipe(csv())
-                        .on('data', function (data) { return results_1.push(data); })
-                        .on('end', function () {
-                        if (results_1[0].Close === 'N/D') {
-                            var message = {
+        this.message = function (socket, msg) { return __awaiter(_this, void 0, void 0, function () {
+            var user, fmtMsg, results, message, message, error_1, message;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        user = this.users.getUser(socket.id);
+                        if (!msg.msg.startsWith('/stock=')) return [3 /*break*/, 5];
+                        fmtMsg = msg.msg.split('=');
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, axios.get("http://bot:6060/get-stock?stock=" + fmtMsg[1])];
+                    case 2:
+                        results = _a.sent();
+                        if (results.data.found) {
+                            message = {
                                 user: user,
-                                message: "Stock not found",
+                                message: results.data.stock,
                                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
                             };
-                            socket.emit('newMessage', message); // everybody including client
+                            this.io.emit('newMessage', message); // everybody including client
                         }
                         else {
-                            var message = {
+                            message = {
                                 user: user,
-                                message: fmtMsg_1[1].toUpperCase() + " quote is $" + results_1[0].Close + " per share",
+                                message: results.data.stock,
                                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
                             };
-                            _this.io.emit('newMessage', message); // everybody including client
+                            socket.emit('newMessage', message); // only client
                         }
-                    });
-                })
-                    .catch(function (err) { return console.log('Error: ' + err.message); });
-            }
-            else {
-                var message = {
-                    user: user,
-                    message: msg.msg,
-                    date: moment().format('MM/DD/YYYY HH:mm:ss'),
-                };
-                _this.io.emit('newMessage', message); // everybody including client
-            }
-        };
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        console.log(error_1.message);
+                        return [3 /*break*/, 4];
+                    case 4: return [3 /*break*/, 6];
+                    case 5:
+                        message = {
+                            user: user,
+                            message: msg.msg,
+                            date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                        };
+                        this.io.emit('newMessage', message); // everybody including client
+                        _a.label = 6;
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); };
         this.disconnect = function (socket) {
             var leftUser = _this.users.userLeft(socket.id);
             if (leftUser) {
@@ -138,12 +135,9 @@ var Socket = /** @class */ (function () {
                     _this.joinRoom(socket, userName, userRoom);
                 });
                 /* Users */
-                socket.on('message', function (msg) { return __awaiter(_this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        this.message(socket, msg);
-                        return [2 /*return*/];
-                    });
-                }); });
+                socket.on('message', function (msg) {
+                    _this.message(socket, msg);
+                });
                 socket.on('disconnect', function () {
                     _this.disconnect(socket);
                 });

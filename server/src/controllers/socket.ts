@@ -1,8 +1,6 @@
 const socketIo = require('socket.io');
 const moment = require('moment');
 const axios = require('axios');
-const csv = require('csv-parser');
-const fs = require('fs');
 
 const AppUsers = require('./users');
 
@@ -22,10 +20,6 @@ class Socket {
     this.users = new AppUsers();
     this.socketInit();
   }
-
-  checkStock = (message: string) => {
-    return message.startsWith('/stock=');
-  };
 
   joinRoom = (socket: any, userName: string, userRoom: string) => {
     const user = this.users.userJoin(socket.id, userName, userRoom);
@@ -53,43 +47,32 @@ class Socket {
     }); // everybody but the client
   };
 
-  message = (socket: any, msg: any) => {
+  message = async (socket: any, msg: any) => {
     const user = this.users.getUser(socket.id);
-    if (this.checkStock(msg.msg)) {
+    if (msg.msg.startsWith('/stock=')) {
       const fmtMsg: string[] = msg.msg.split('=');
-      const url = `https://stooq.com/q/l/?s=${fmtMsg[1]}&f=sd2t2ohlcv&h&e=csv`;
-      const results: any = [];
-      axios
-        .get(url, {
-          method: 'get',
-          responseType: 'stream',
-        })
-        .then((res: any) => {
-          res.data.pipe(fs.createWriteStream('file.csv'));
-          fs.createReadStream('file.csv')
-            .pipe(csv())
-            .on('data', (data: any) => results.push(data))
-            .on('end', () => {
-              if (results[0].Close === 'N/D') {
-                const message = {
-                  user,
-                  message: `Stock not found`,
-                  date: moment().format('MM/DD/YYYY HH:mm:ss'),
-                };
-                socket.emit('newMessage', message); // everybody including client
-              } else {
-                const message = {
-                  user,
-                  message: `${fmtMsg[1].toUpperCase()} quote is \$${
-                    results[0].Close
-                  } per share`,
-                  date: moment().format('MM/DD/YYYY HH:mm:ss'),
-                };
-                this.io.emit('newMessage', message); // everybody including client
-              }
-            });
-        })
-        .catch((err: Error) => console.log('Error: ' + err.message));
+      try {
+        const results = await axios.get(
+          `http://bot:6060/get-stock?stock=${fmtMsg[1]}`,
+        );
+        if (results.data.found) {
+          const message = {
+            user,
+            message: results.data.stock,
+            date: moment().format('MM/DD/YYYY HH:mm:ss'),
+          };
+          this.io.emit('newMessage', message); // everybody including client
+        } else {
+          const message = {
+            user,
+            message: results.data.stock,
+            date: moment().format('MM/DD/YYYY HH:mm:ss'),
+          };
+          socket.emit('newMessage', message); // only client
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
     } else {
       const message = {
         user,
@@ -131,7 +114,7 @@ class Socket {
       );
 
       /* Users */
-      socket.on('message', async (msg: any) => {
+      socket.on('message', (msg: any) => {
         this.message(socket, msg);
       });
 

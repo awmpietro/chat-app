@@ -1,7 +1,7 @@
 {
-  "name": "chat-app-server",
+  "name": "chat-app-bot",
   "version": "1.0.0",
-  "description": "This is the server of a chat app for testing purposes at Jobsity",
+  "description": "This is the bot of the chat responsible for getting to stock app for testing purposes at Jobsity",
   "main": "./build/app.js",
   "author": "Arthur Mastropietro <awmpietro@gmail.com>",
   "private": false,
@@ -23,13 +23,11 @@
   "dependencies": {
     "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.9",
-    "@types/socket.io": "^2.1.11",
     "axios": "^0.21.0",
     "body-parser": "^1.19.0",
     "csv-parser": "^2.3.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "moment": "^2.29.1",
-    "socket.io": "^3.0.1"
+    "query-string": "^6.13.7"
   }
 }

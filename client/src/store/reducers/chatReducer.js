@@ -3,7 +3,7 @@ import { NEW_MESSAGE, LOGIN, REGISTER } from "../types";
 const INITIAL_STATE = {
   messages: [],
   isLoggedIn: false,
-  user: { id: "", name: "" },
+  user: { userId: "", userName: "", userRoom: "" },
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -15,14 +15,22 @@ export default (state = INITIAL_STATE, action) => {
       return {
         ...state,
         isSignedIn: action.payload.isSignedIn,
-        user: { id: action.payload.user.id, name: action.payload.user.name },
+        user: {
+          userId: action.payload.user.userId,
+          userName: action.payload.user.userName,
+          userRoom: action.payload.user.userRoom,
+        },
       };
     }
     case REGISTER: {
       return {
         ...state,
         isSignedIn: action.payload.isSignedIn,
-        user: { id: action.payload.user.id, name: action.payload.user.name },
+        user: {
+          userId: action.payload.user.userId,
+          userName: action.payload.user.userName,
+          userRoom: action.payload.user.userRoom,
+        },
       };
     }
     default:

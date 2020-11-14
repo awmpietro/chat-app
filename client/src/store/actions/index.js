@@ -5,9 +5,10 @@ import { NEW_MESSAGE, LOGIN, REGISTER } from "../types";
 const URL = process.env.REACT_APP_SERVER_URL;
 let socket;
 
-const socketHandle = () => {
+const socketHandle = user => {
   return dispatch => {
     socket = io.connect(URL);
+    socket.emit("joinRoom", user);
 
     socket.on("newMessage", res => {
       dispatch(newMessage(res));
@@ -22,30 +23,59 @@ const chatMessage = msg => {
 };
 
 const socketDisconnect = () => {
-  return dispatch => {
+  return () => {
     socket.disconnect();
   };
 };
 
 const newMessage = payload => {
-  return { type: NEW_MESSAGE, payload };
+  return (dispatch, getState) => {
+    if (getState().chat.user.userRoom === payload.user.userRoom) {
+      dispatch({
+        type: NEW_MESSAGE,
+        payload,
+      });
+    }
+  };
 };
 
 const login = credentials => {
   return dispatch => {
-    dispatch({
-      type: LOGIN,
-      payload: { isSignedIn: true, user: { id: "01", name: "Arthur" } },
-    });
+    const user = { id: "01", name: "Arthur" }; //return from API
+    dispatch([
+      socketHandle({ userName: user.name, userRoom: credentials.room }),
+      {
+        type: LOGIN,
+        payload: {
+          isSignedIn: true,
+          user: {
+            userId: user.id,
+            userName: user.name,
+            userRoom: credentials.room,
+          },
+        },
+      },
+    ]);
   };
 };
 
 const register = credentials => {
   return dispatch => {
-    dispatch({
-      type: REGISTER,
-      payload: { isSignedIn: true, user: { id: "01", name: "Arthur" } },
-    });
+    const user = { id: "01", name: "Arthur" }; //return from API
+    dispatch([
+      socketHandle({ userName: user.name, userRoom: credentials.room }),
+      {
+        type: REGISTER,
+        payload: {
+          isSignedIn: true,
+          user: {
+            userId: user.id,
+            userName: user.name,
+            userRoom: credentials.room,
+          },
+        },
+      },
+    ]);
   };
 };
 

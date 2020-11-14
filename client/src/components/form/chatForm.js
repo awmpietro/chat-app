@@ -8,6 +8,7 @@ let ChatForm = ({
   handleSubmit,
   onSubmit,
   pristine = false,
+  reset,
   submitting = false,
 }) => {
   return (

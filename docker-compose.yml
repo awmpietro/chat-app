@@ -26,6 +26,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
+      - BOT_URL=http://localhost:6060
       - PORT=7070
     ports:
       - '7070:7070'
@@ -34,3 +35,19 @@ services:
       - ./server:/app/
       - /app/node_modules
     container_name: server
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    depends_on:
+      - server
+    environment:
+      - NODE_ENV=development
+      - PORT=6060
+    ports:
+      - '6060:6060'
+    command: yarn start
+    volumes:
+      - ./bot:/app/
+      - /app/node_modules
+    container_name: bot

@@ -20,17 +20,6 @@ const Login = props => {
       <JoinHeader />
       <main className="join-main">
         <LoginForm onSubmit={onSubmit} />
-        {/* <div className="form-control">
-            <label for="room">Room</label>
-            <select name="room" id="room">
-              <option value="JavaScript">JavaScript</option>
-              <option value="Python">Python</option>
-              <option value="PHP">PHP</option>
-              <option value="C#">C#</option>
-              <option value="Ruby">Ruby</option>
-              <option value="Java">Java</option>
-            </select>
-          </div> */}
         <div className="sign-link">
           Click <Link to="/register">here </Link>to create an account
         </div>

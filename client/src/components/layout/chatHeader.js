@@ -8,7 +8,7 @@ const ChatHeader = () => {
         <i className="fas fa-smile"></i> Chat App
       </h1>
       <Link to={"/login"} className="btn">
-        Leave Room
+        Leave Chat
       </Link>
     </header>
   );

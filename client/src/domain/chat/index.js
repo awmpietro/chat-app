@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { connect } from "react-redux";
+import { reset } from "redux-form";
 
-import { socketHandle, chatMessage } from "../../store/actions";
+import { chatMessage } from "../../store/actions";
 import ChatHeader from "../../components/layout/chatHeader";
 import ChatForm from "../../components/form/chatForm";
 
@@ -10,19 +11,17 @@ const Chat = props => {
     return !props.isSignedIn ? props.history.push("/login") : null;
   }, [props.isSignedIn]);
 
-  useEffect(() => {
-    props.socketHandle();
-  }, []);
-
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [props.messages]);
 
-  const onSubmit = values => {
+  const onSubmit = (values, dispatch) => {
+    const { chatMessage } = props;
     const { msg } = values;
-    return props.chatMessage(msg);
+    dispatch(reset("chat-form"));
+    return chatMessage(msg);
   };
 
   return (
@@ -31,9 +30,9 @@ const Chat = props => {
       <main className="chat-main">
         <div className="chat-sidebar">
           <h3>
-            <i className="fas fa-comments"></i> Room Name:
+            <i className="fas fa-comments"></i> Room Name
           </h3>
-          <h2 id="room-name"></h2>
+          <h2 id="room-name">{props.user.userRoom}</h2>
           <h3>
             <i className="fas fa-users"></i> Users
           </h3>
@@ -44,7 +43,7 @@ const Chat = props => {
             return (
               <div className="message" key={msg.date}>
                 <p className="meta">
-                  {props.user.name} <span>{msg.date}</span>
+                  {msg.user.userName} <span>{msg.date}</span>
                 </p>
                 <p className="text">{msg.message}</p>
               </div>
@@ -65,4 +64,4 @@ const mapStateToProps = state => {
   return { messages, user, isSignedIn };
 };
 
-export default connect(mapStateToProps, { socketHandle, chatMessage })(Chat);
+export default connect(mapStateToProps, { chatMessage })(Chat);

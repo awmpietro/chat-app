@@ -3,6 +3,7 @@ require('dotenv').config();
 var express = require('express');
 var _a = require('http'), createServer = _a.createServer, Server = _a.Server;
 var socketIo = require('socket.io');
+var moment = require('moment');
 var App = /** @class */ (function () {
     function App() {
         var _this = this;
@@ -10,10 +11,20 @@ var App = /** @class */ (function () {
         this.socketInit = function () {
             _this.io.on('connection', function (socket) {
                 console.log('a user connected');
-                socket.emit('newMessage', 'Welcome to Chat App'); // the client
-                socket.broadcast.emit('message', 'An user has joined the chat'); // evrybody but the client
+                socket.emit('newMessage', {
+                    message: 'Welcome to Chat App',
+                    date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                }); // the client
+                socket.broadcast.emit('newMessage', {
+                    message: 'An user has joined the chat',
+                    date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                }); // evrybody but the client
                 socket.on('message', function (msg) {
-                    _this.io.emit('newMessage', msg.msg); // everybody
+                    var message = {
+                        message: msg.msg,
+                        date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                    };
+                    _this.io.emit('newMessage', message); // everybody
                 });
                 socket.on('disconnect', function () {
                     console.log('user disconnected');
@@ -33,7 +44,10 @@ var App = /** @class */ (function () {
         this.socketInit();
     }
     App.prototype.routesInit = function () {
-        this.app.route('/').get(function (req, res) {
+        this.app.route('/login').post(function (req, res) {
+            res.json('Working');
+        });
+        this.app.route('/register').post(function (req, res) {
             res.json('Working');
         });
     };

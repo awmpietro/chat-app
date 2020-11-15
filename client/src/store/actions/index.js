@@ -1,13 +1,15 @@
 import io from "socket.io-client";
+import axios from "axios";
 
-import { NEW_MESSAGE, LOGIN, REGISTER } from "../types";
+import { NEW_MESSAGE, LOGIN, REGISTER, LOGOUT, SIGN_ERROR } from "../types";
+import Auth from "../../lib/JwtAuth";
 
 const URL = process.env.REACT_APP_SERVER_URL;
 let socket;
 
 const socketHandle = user => {
   return dispatch => {
-    socket = io.connect(URL);
+    socket = io.connect(URL, { query: { token: Auth.getToken() } });
     socket.emit("joinRoom", user);
 
     socket.on("newMessage", res => {
@@ -39,43 +41,86 @@ const newMessage = payload => {
   };
 };
 
-const login = credentials => {
-  return dispatch => {
-    const user = { id: "01", name: "Arthur" }; //return from API
-    dispatch([
-      socketHandle({ userName: user.name, userRoom: credentials.room }),
-      {
-        type: LOGIN,
-        payload: {
-          isSignedIn: true,
-          user: {
-            userId: user.id,
-            userName: user.name,
-            userRoom: credentials.room,
+const login = cred => {
+  return async dispatch => {
+    try {
+      const user = await axios.post(`${URL}/login`, {
+        credentials: { email: cred.email, password: cred.password },
+      });
+      Auth.setToken(user.data.token, user.data.user.id, user.data.user.name);
+      dispatch([
+        socketHandle({ userName: user.data.user.name, userRoom: cred.room }),
+        {
+          type: LOGIN,
+          payload: {
+            isSignedIn: true,
+            user: {
+              userId: user.data.user.id,
+              userName: user.data.user.name,
+              userRoom: cred.room,
+            },
           },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      let err = "";
+      if (error.response.data) {
+        err = error.response.data;
+      } else {
+        err = error.message;
+      }
+      dispatch({
+        type: SIGN_ERROR,
+        error: err,
+      });
+    }
   };
 };
 
-const register = credentials => {
+const logout = () => {
   return dispatch => {
-    const user = { id: "01", name: "Arthur" }; //return from API
-    dispatch([
-      socketHandle({ userName: user.name, userRoom: credentials.room }),
-      {
-        type: REGISTER,
-        payload: {
-          isSignedIn: true,
-          user: {
-            userId: user.id,
-            userName: user.name,
-            userRoom: credentials.room,
+    Auth.logout();
+    dispatch([{ type: LOGOUT }, socketDisconnect()]);
+  };
+};
+
+const register = cred => {
+  return async dispatch => {
+    try {
+      const user = await axios.post(`${URL}/register`, {
+        credentials: {
+          name: cred.name,
+          email: cred.email,
+          password: cred.password,
+        },
+      });
+      Auth.setToken(user.data.token, user.data.user.id, user.data.user.name);
+      dispatch([
+        socketHandle({ userName: user.data.user.name, userRoom: cred.room }),
+        {
+          type: REGISTER,
+          payload: {
+            isSignedIn: true,
+            user: {
+              userId: user.data.user.id,
+              userName: user.data.user.name,
+              userRoom: cred.room,
+            },
           },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      let err = "";
+      if (error.response.data) {
+        err = error.response.data;
+      } else {
+        err = error.message;
+      }
+      dispatch({
+        type: SIGN_ERROR,
+        error: err,
+      });
+    }
   };
 };
 
@@ -86,4 +131,5 @@ export {
   newMessage,
   login,
   register,
+  logout,
 };

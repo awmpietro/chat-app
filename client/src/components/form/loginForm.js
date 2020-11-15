@@ -10,7 +10,14 @@ let LoginForm = ({
   onSubmit,
   pristine = false,
   submitting = false,
+  isError,
+  errorMessage,
 }) => {
+  const showErrors = () => {
+    if (isError) {
+      return <div className="form-control error-message">{errorMessage}</div>;
+    }
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)} id="chat-form">
       <div className="form-control">
@@ -47,6 +54,7 @@ let LoginForm = ({
       <button className="btn" disabled={pristine || submitting}>
         <i className="fas fa-paper-plane"></i> Login
       </button>
+      {showErrors()}
     </form>
   );
 };
@@ -58,4 +66,9 @@ LoginForm = reduxForm({
   },
 })(LoginForm);
 
-export default connect(null, {})(LoginForm);
+const mapStateToProps = state => {
+  const { errorMessage, isError } = state.chat;
+  return { errorMessage, isError };
+};
+
+export default connect(mapStateToProps, {})(LoginForm);

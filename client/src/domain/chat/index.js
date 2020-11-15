@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { connect } from "react-redux";
 import { reset } from "redux-form";
 
-import { chatMessage } from "../../store/actions";
+import { chatMessage, logout } from "../../store/actions";
 import ChatHeader from "../../components/layout/chatHeader";
 import ChatForm from "../../components/form/chatForm";
 
@@ -24,9 +24,14 @@ const Chat = props => {
     return chatMessage(msg);
   };
 
+  const logout = () => {
+    props.logout();
+    props.history.push("/login");
+  };
+
   return (
     <div className="chat-container">
-      <ChatHeader />
+      <ChatHeader logout={logout} />
       <main className="chat-main">
         <div className="chat-sidebar">
           <h3>
@@ -64,4 +69,4 @@ const mapStateToProps = state => {
   return { messages, user, isSignedIn };
 };
 
-export default connect(mapStateToProps, { chatMessage })(Chat);
+export default connect(mapStateToProps, { chatMessage, logout })(Chat);

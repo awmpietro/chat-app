@@ -35,10 +35,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 var socketIo = require('socket.io');
 var moment = require('moment');
 var axios = require('axios');
-var AppUsers = require('./users');
+var jwt = require('jsonwebtoken');
+var Users = require('./users');
 var Socket = /** @class */ (function () {
     function Socket(server) {
         var _this = this;
@@ -46,7 +48,6 @@ var Socket = /** @class */ (function () {
         this.joinRoom = function (socket, userName, userRoom) {
             var user = _this.users.userJoin(socket.id, userName, userRoom);
             socket.join(user.userRoom);
-            /* Bots */
             socket.emit('newMessage', {
                 user: {
                     userId: socket.id,
@@ -77,7 +78,7 @@ var Socket = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, axios.get("http://bot:6060/get-stock?stock=" + fmtMsg[1])];
+                        return [4 /*yield*/, axios.get(process.env.BOT_URL + "/get-stock?stock=" + fmtMsg[1])];
                     case 2:
                         results = _a.sent();
                         if (results.data.found) {
@@ -129,7 +130,21 @@ var Socket = /** @class */ (function () {
             }
         };
         this.socketInit = function () {
-            _this.io.on('connection', function (socket) {
+            _this.io
+                .use(function (socket, next) {
+                if (socket.handshake.query && socket.handshake.query.token) {
+                    jwt.verify(socket.handshake.query.token, process.env.SECRET_KEY, function (err, decoded) {
+                        if (err)
+                            return next(new Error('Authentication error'));
+                        socket.decoded = decoded;
+                        next();
+                    });
+                }
+                else {
+                    next(new Error('Authentication error'));
+                }
+            })
+                .on('connection', function (socket) {
                 socket.on('joinRoom', function (_a) {
                     var userName = _a.userName, userRoom = _a.userRoom;
                     _this.joinRoom(socket, userName, userRoom);
@@ -150,7 +165,7 @@ var Socket = /** @class */ (function () {
                 credentials: true,
             },
         });
-        this.users = new AppUsers();
+        this.users = new Users();
         this.socketInit();
     }
     return Socket;

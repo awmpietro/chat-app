@@ -1,8 +1,10 @@
+export {};
 const socketIo = require('socket.io');
 const moment = require('moment');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 
-const AppUsers = require('./users');
+const Users = require('./users');
 
 class Socket {
   private io: SocketIO.Server;
@@ -17,7 +19,7 @@ class Socket {
         credentials: true,
       },
     });
-    this.users = new AppUsers();
+    this.users = new Users();
     this.socketInit();
   }
 
@@ -25,7 +27,6 @@ class Socket {
     const user = this.users.userJoin(socket.id, userName, userRoom);
     socket.join(user.userRoom);
 
-    /* Bots */
     socket.emit('newMessage', {
       user: {
         userId: socket.id,
@@ -53,7 +54,7 @@ class Socket {
       const fmtMsg: string[] = msg.msg.split('=');
       try {
         const results = await axios.get(
-          `http://bot:6060/get-stock?stock=${fmtMsg[1]}`,
+          `${process.env.BOT_URL}/get-stock?stock=${fmtMsg[1]}`,
         );
         if (results.data.found) {
           const message = {
@@ -99,29 +100,45 @@ class Socket {
   };
 
   socketInit = (): void => {
-    this.io.on('connection', (socket: any) => {
-      socket.on(
-        'joinRoom',
-        ({
-          userName,
-          userRoom,
-        }: {
-          userName: string;
-          userRoom: string;
-        }) => {
-          this.joinRoom(socket, userName, userRoom);
-        },
-      );
+    this.io
+      .use((socket: any, next: any) => {
+        if (socket.handshake.query && socket.handshake.query.token) {
+          jwt.verify(
+            socket.handshake.query.token,
+            process.env.SECRET_KEY,
+            (err: Error, decoded: any) => {
+              if (err) return next(new Error('Authentication error'));
+              socket.decoded = decoded;
+              next();
+            },
+          );
+        } else {
+          next(new Error('Authentication error'));
+        }
+      })
+      .on('connection', (socket: any) => {
+        socket.on(
+          'joinRoom',
+          ({
+            userName,
+            userRoom,
+          }: {
+            userName: string;
+            userRoom: string;
+          }) => {
+            this.joinRoom(socket, userName, userRoom);
+          },
+        );
 
-      /* Users */
-      socket.on('message', (msg: any) => {
-        this.message(socket, msg);
-      });
+        /* Users */
+        socket.on('message', (msg: any) => {
+          this.message(socket, msg);
+        });
 
-      socket.on('disconnect', () => {
-        this.disconnect(socket);
+        socket.on('disconnect', () => {
+          this.disconnect(socket);
+        });
       });
-    });
   };
 }
 

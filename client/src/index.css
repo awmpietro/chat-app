@@ -38,7 +38,7 @@ a {
 
 .btn {
   cursor: pointer;
-  padding: 5px 15px;
+  padding: 10px 15px;
   background: var(--light-color);
   color: var(--dark-color-a);
   border: 0;
@@ -167,7 +167,8 @@ a {
 }
 
 .join-main input[type="email"],
-.join-main input[type="password"] {
+.join-main input[type="password"],
+.join-main input[type="text"] {
   font-size: 16px;
   padding: 5px;
   height: 40px;
@@ -188,6 +189,14 @@ a {
 
 .join-main .sign-link {
   margin-top: 20px;
+  text-align: center;
+}
+
+.join-main .error-message {
+  margin-top: 20px;
+  background-color: var(--error-color);
+  color: var(--light-color);
+  padding: 10px 5px;
   text-align: center;
 }
 

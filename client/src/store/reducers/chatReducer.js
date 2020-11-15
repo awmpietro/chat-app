@@ -1,9 +1,12 @@
-import { NEW_MESSAGE, LOGIN, REGISTER } from "../types";
+import { NEW_MESSAGE, LOGIN, REGISTER, LOGOUT, SIGN_ERROR } from "../types";
 
 const INITIAL_STATE = {
   messages: [],
   isLoggedIn: false,
   user: { userId: "", userName: "", userRoom: "" },
+  users: [],
+  isError: false,
+  errorMessage: "",
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -32,6 +35,18 @@ export default (state = INITIAL_STATE, action) => {
           userRoom: action.payload.user.userRoom,
         },
       };
+    }
+    case LOGOUT: {
+      return {
+        ...state,
+        userId: "",
+        userName: "",
+        userRoom: "",
+        isSignedIn: false,
+      };
+    }
+    case SIGN_ERROR: {
+      return { ...state, isError: true, errorMessage: action.error };
     }
     default:
       return state;

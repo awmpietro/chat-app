@@ -9,7 +9,7 @@ services:
     depends_on:
       - server
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
       - NODE_OPTIONS=--max-old-space-size=4096
       - REACT_APP_SERVER_URL=http://localhost:7070
@@ -24,13 +24,20 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    depends_on:
+      - postgres
     environment:
-      - NODE_ENV=development
-      - BOT_URL=http://localhost:6060
+      - NODE_ENV=production
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_NAME=chat_app
+      - DB_USER=postgres
+      - DB_PASS=1234
+      - BOT_URL=http://bot:6060
       - PORT=7070
     ports:
       - '7070:7070'
-    command: yarn start
+    command: sh -c "node_modules/.bin/sequelize db:migrate && node_modules/.bin/sequelize db:seed:all && yarn start"
     volumes:
       - ./server:/app/
       - /app/node_modules
@@ -42,7 +49,7 @@ services:
     depends_on:
       - server
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=6060
     ports:
       - '6060:6060'
@@ -51,3 +58,13 @@ services:
       - ./bot:/app/
       - /app/node_modules
     container_name: bot
+  postgres:
+    image: postgres:11.9
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_HOST: host.docker.internal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: chat_app
+    container_name: postgres

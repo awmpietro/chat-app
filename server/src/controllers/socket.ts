@@ -3,12 +3,14 @@ const socketIo = require('socket.io');
 const moment = require('moment');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const amqp = require('amqplib/callback_api');
 
 const Users = require('./users');
 
 class Socket {
   private io: SocketIO.Server;
   private chatBotName: string = 'Chat App';
+  public rabbitMq: typeof amqp;
   public users: Users;
 
   constructor(server: any) {
@@ -22,6 +24,30 @@ class Socket {
     this.users = new Users();
     this.socketInit();
   }
+
+  amqpConn = () => {
+    amqp.connect('http://localhost:5762' + '?heartbeat=60', function (
+      err,
+      conn,
+    ) {
+      if (err) {
+        console.error('[AMQP]', err.message);
+        return setTimeout(start, 1000);
+      }
+      conn.on('error', function (err) {
+        if (err.message !== 'Connection closing') {
+          console.error('[AMQP] conn error', err.message);
+        }
+      });
+      conn.on('close', function () {
+        console.error('[AMQP] reconnecting');
+        return setTimeout(start, 1000);
+      });
+      console.log('[AMQP] connected');
+      this.rabbitMq = conn;
+      whenConnected();
+    });
+  };
 
   joinRoom = (socket: any, userName: string, userRoom: string) => {
     const user = this.users.userJoin(socket.id, userName, userRoom);
@@ -52,28 +78,44 @@ class Socket {
     const user = this.users.getUser(socket.id);
     if (msg.msg.startsWith('/stock=')) {
       const fmtMsg: string[] = msg.msg.split('=');
-      try {
-        const results = await axios.get(
-          `${process.env.BOT_URL}/get-stock?stock=${fmtMsg[1]}`,
-        );
-        if (results.data.found) {
-          const message = {
-            user,
-            message: results.data.stock,
-            date: moment().format('MM/DD/YYYY HH:mm:ss'),
-          };
-          this.io.emit('newMessage', message); // everybody including client
-        } else {
-          const message = {
-            user,
-            message: results.data.stock,
-            date: moment().format('MM/DD/YYYY HH:mm:ss'),
-          };
-          socket.emit('newMessage', message); // only client
-        }
-      } catch (error) {
-        console.log(error.message);
-      }
+      // Send to bot, bot will queue
+      axios
+        .get(`${process.env.BOT_URL}/get-stock?stock=${fmtMsg[1]}`)
+        .catch((error: Error) => {
+          console.log(error);
+        });
+
+      // CONSUMER OF THE QUEUE
+
+      this.rabbitMq.createChannel(function (err, ch) {
+        if (closeOnErr(err)) return;
+        ch.on('error', function (err) {
+          console.error('[AMQP] channel error', err.message);
+        });
+        ch.on('close', function () {
+          console.log('[AMQP] channel closed');
+        });
+
+        ch.prefetch(10);
+        ch.assertQueue('jobs', { durable: true }, function (
+          err,
+          _ok,
+        ) {
+          if (closeOnErr(err)) return;
+          ch.consume(
+            'jobs',
+            (results) => {
+              const message = {
+                user,
+                message: results.stock,
+                date: moment().format('MM/DD/YYYY HH:mm:ss'),
+              };
+              socket.emit('newMessage', message); // only client
+            },
+            { noAck: false },
+          );
+        });
+      });
     } else {
       const message = {
         user,

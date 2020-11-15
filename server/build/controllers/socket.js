@@ -40,6 +40,7 @@ var socketIo = require('socket.io');
 var moment = require('moment');
 var axios = require('axios');
 var jwt = require('jsonwebtoken');
+var amqp = require('amqp');
 var Users = require('./users');
 var Socket = /** @class */ (function () {
     function Socket(server) {
@@ -68,51 +69,47 @@ var Socket = /** @class */ (function () {
             }); // everybody but the client
         };
         this.message = function (socket, msg) { return __awaiter(_this, void 0, void 0, function () {
-            var user, fmtMsg, results, message, message, error_1, message;
+            var user, fmtMsg, queue, message;
+            var _this = this;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        user = this.users.getUser(socket.id);
-                        if (!msg.msg.startsWith('/stock=')) return [3 /*break*/, 5];
-                        fmtMsg = msg.msg.split('=');
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, axios.get(process.env.BOT_URL + "/get-stock?stock=" + fmtMsg[1])];
-                    case 2:
-                        results = _a.sent();
-                        if (results.data.found) {
-                            message = {
+                user = this.users.getUser(socket.id);
+                if (msg.msg.startsWith('/stock=')) {
+                    fmtMsg = msg.msg.split('=');
+                    // Send to bot, bot will queue
+                    axios
+                        .get(process.env.BOT_URL + "/get-stock?stock=" + fmtMsg[1])
+                        .catch(function (error) {
+                        console.log(error);
+                    });
+                    queue = this.rabbitMq.queue('chat-queue');
+                    queue.subscribe(function (results) {
+                        if (results.found) {
+                            var message = {
                                 user: user,
-                                message: results.data.stock,
+                                message: results.stock,
                                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
                             };
-                            this.io.emit('newMessage', message); // everybody including client
+                            _this.io.emit('newMessage', message); // everybody including client
                         }
                         else {
-                            message = {
+                            var message = {
                                 user: user,
-                                message: results.data.stock,
+                                message: results.stock,
                                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
                             };
                             socket.emit('newMessage', message); // only client
                         }
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_1 = _a.sent();
-                        console.log(error_1.message);
-                        return [3 /*break*/, 4];
-                    case 4: return [3 /*break*/, 6];
-                    case 5:
-                        message = {
-                            user: user,
-                            message: msg.msg,
-                            date: moment().format('MM/DD/YYYY HH:mm:ss'),
-                        };
-                        this.io.emit('newMessage', message); // everybody including client
-                        _a.label = 6;
-                    case 6: return [2 /*return*/];
+                    });
                 }
+                else {
+                    message = {
+                        user: user,
+                        message: msg.msg,
+                        date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                    };
+                    this.io.emit('newMessage', message); // everybody including client
+                }
+                return [2 /*return*/];
             });
         }); };
         this.disconnect = function (socket) {
@@ -166,6 +163,10 @@ var Socket = /** @class */ (function () {
             },
         });
         this.users = new Users();
+        this.rabbitMq = amqp.createConnection({
+            host: 'localhost',
+            port: 5762,
+        });
         this.socketInit();
     }
     return Socket;

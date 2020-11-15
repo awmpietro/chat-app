@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const csv = require('csv-parser');
 
-const getStock = (req: any, res: any) => {
+const getStock = async (req: any, res: any) => {
   const stock = req.query.stock;
   const url = `https://stooq.com/q/l/?s=${stock}&f=sd2t2ohlcv&h&e=csv`;
   const results: any = [];
@@ -33,6 +33,15 @@ const getStock = (req: any, res: any) => {
                 res.status(500);
                 res.json(err.message);
               }
+              // queue the object: PRODUCER
+              const mq = res.locals.mq;
+              mq.publish(
+                '',
+                'jobs',
+                new Buffer(
+                  JSON.stringify({ found: true, stock: msg }),
+                ),
+              );
               return res.json({ found: true, stock: msg });
             });
           }

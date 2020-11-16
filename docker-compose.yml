@@ -34,6 +34,7 @@ services:
       - DB_NAME=chat_app
       - DB_USER=postgres
       - DB_PASS=1234
+      - SECRET_KEY=JOBSITY
       - BOT_URL=http://bot:6060
       - PORT=7070
       - MESSAGE_QUEUE=amqp://rabbitmq:5672

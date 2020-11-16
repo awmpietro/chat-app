@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   client:
-    tty: true
+    tty: false
     build:
       context: ./client
       dockerfile: Dockerfile
@@ -14,8 +14,8 @@ services:
       - NODE_OPTIONS=--max-old-space-size=4096
       - REACT_APP_SERVER_URL=http://localhost:7070
     ports:
-      - '3000:3000'
-    command: yarn start
+      - "5000:5000"
+    command: sh -c "npm run build && serve -s build"
     volumes:
       - ./client:/app
       - /app/node_modules
@@ -39,7 +39,7 @@ services:
       - MESSAGE_QUEUE=amqp://rabbitmq:5672
     ports:
       - '7070:7070'
-    command: sh -c "node_modules/.bin/sequelize db:migrate && node_modules/.bin/sequelize db:seed:all && yarn start"
+    command: sh -c "node_modules/.bin/sequelize db:migrate && node_modules/.bin/sequelize db:seed:all && yarn test && yarn start"
     volumes:
       - ./server:/app/
       - /app/node_modules

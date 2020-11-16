@@ -42,6 +42,7 @@ var App = /** @class */ (function () {
     App.prototype.routesInit = function () {
         this.app.route('/login').post(routes_1.login);
         this.app.route('/register').post(routes_1.register);
+        this.app.route('/register/delete').post(routes_1.userDelete);
     };
     return App;
 }());
@@ -50,3 +51,4 @@ var app = new App();
 app.server.listen(app.PORT, function () {
     console.log("Server listening at " + app.PORT);
 });
+exports.default = app;

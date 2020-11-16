@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.register = exports.login = void 0;
+exports.userDelete = exports.register = exports.login = void 0;
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var _a = require('express'), Request = _a.Request, Response = _a.Response;
@@ -138,3 +138,27 @@ var register = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     });
 }); };
 exports.register = register;
+/*
+ * @function: userDelete
+ * function that removes user from db.
+ * @params: req: Request object, res: Response object.
+ */
+var userDelete = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var error_3;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 2, , 3]);
+                return [4 /*yield*/, UserModel.destroy({ where: { email: req.body.email } })];
+            case 1:
+                _a.sent();
+                return [2 /*return*/, res.json('Deleted Succesfully')];
+            case 2:
+                error_3 = _a.sent();
+                res.status(500);
+                return [2 /*return*/, res.send("Error : " + error_3.message)];
+            case 3: return [2 /*return*/];
+        }
+    });
+}); };
+exports.userDelete = userDelete;

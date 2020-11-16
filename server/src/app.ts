@@ -1,11 +1,10 @@
-export {};
 import 'dotenv/config';
 import bodyParser from 'body-parser';
 import express from 'express';
 import { createServer, Server } from 'http';
 
 import Socket from './controllers/socket';
-import { login, register } from './routes';
+import { login, register, userDelete } from './routes';
 
 /*
  * @class: App
@@ -51,6 +50,7 @@ class App {
   routesInit() {
     this.app.route('/login').post(login);
     this.app.route('/register').post(register);
+    this.app.route('/register/delete').post(userDelete);
   }
 }
 
@@ -60,3 +60,5 @@ const app = new App();
 app.server.listen(app.PORT, () => {
   console.log(`Server listening at ${app.PORT}`);
 });
+
+export default app;

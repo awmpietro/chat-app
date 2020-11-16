@@ -85,4 +85,22 @@ const register = async (
   }
 };
 
-export { login, register };
+/*
+ * @function: userDelete
+ * function that removes user from db.
+ * @params: req: Request object, res: Response object.
+ */
+const userDelete = async (
+  req: typeof Request,
+  res: typeof Response,
+) => {
+  try {
+    await UserModel.destroy({ where: { email: req.body.email } });
+    return res.json('Deleted Succesfully');
+  } catch (error) {
+    res.status(500);
+    return res.send(`Error : ${error.message}`);
+  }
+};
+
+export { login, register, userDelete };

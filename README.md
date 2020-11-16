@@ -26,14 +26,14 @@ cd chat-app
 docker-compose up
 ```
 
-After building, You can access the app on `http://localhost:5000`.
+After building, You can access the app on [http://localhost:5000](http://localhost:5000).
 
 - Server will run on `http://localhost:7070`; It will first run the tests before starting.
 - Bot will run on `http://localhost:6060`;
 - Postgress will run on `http://localhost:5432`;
 - RabbitMq will run on `http://localhost:5672` and the web interface on `http://localhost:15672`.
 
-Credentials for login (populated register):
+Credentials for login (populated register, also registering new users is tottaly possible):
 
 ```sh
 email: johndoe@test.com

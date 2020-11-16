@@ -37,8 +37,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
+var _a = require('express'), Request = _a.Request, Response = _a.Response;
 var sequelize = require('../models/index').sequelize;
 var UserModel = require("../models").users;
+/*
+ * @function: login
+ * function that handles /login request.
+ * @params: req: Request object, res: Response object.
+ */
 var login = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, email, password, user, isMatch, token, error_1;
     return __generator(this, function (_b) {
@@ -84,6 +90,11 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
         }
     });
 }); };
+/*
+ * @function: register
+ * function that handles /register request.
+ * @params: req: Request object, res: Response object.
+ */
 var register = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, name, email, password, salt, hashedPassword, user, token, error_2;
     return __generator(this, function (_b) {

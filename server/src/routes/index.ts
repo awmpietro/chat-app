@@ -1,10 +1,16 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { Request, Response } = require('express');
 
 const { sequelize } = require('../models/index');
 const { users: UserModel } = require(`../models`);
 
-const login = async (req: any, res: any) => {
+/*
+ * @function: login
+ * function that handles /login request.
+ * @params: req: Request object, res: Response object.
+ */
+const login = async (req: typeof Request, res: typeof Response) => {
   try {
     const { email, password } = req.body.credentials;
 
@@ -41,7 +47,15 @@ const login = async (req: any, res: any) => {
   }
 };
 
-const register = async (req: any, res: any) => {
+/*
+ * @function: register
+ * function that handles /register request.
+ * @params: req: Request object, res: Response object.
+ */
+const register = async (
+  req: typeof Request,
+  res: typeof Response,
+) => {
   try {
     const { name, email, password } = req.body.credentials;
     const salt = await bcrypt.genSalt(10);

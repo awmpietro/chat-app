@@ -36,6 +36,7 @@ services:
       - DB_PASS=1234
       - BOT_URL=http://bot:6060
       - PORT=7070
+      - MESSAGE_QUEUE=amqp://rabbitmq:5672
     ports:
       - '7070:7070'
     command: sh -c "node_modules/.bin/sequelize db:migrate && node_modules/.bin/sequelize db:seed:all && yarn start"
@@ -49,9 +50,11 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - server
+      - rabbitmq
     environment:
       - NODE_ENV=production
       - PORT=6060
+      - MESSAGE_QUEUE=amqp://rabbitmq:5672
     ports:
       - '6060:6060'
     command: yarn start
@@ -70,20 +73,13 @@ services:
       POSTGRES_DB: chat_app
     container_name: postgres
   rabbitmq:
-    image: rabbitmq
-    hostname: rabbitmq
-    expose:
-      - '5672'
-      - '15672:15672'
-    # healthcheck:
-    #   test: [ "CMD", "nc", "-z", "localhost", "5672" ]
-    #   interval: 5s
-    #   timeout: 15s
-    #   retries: 1
-    environment:
-      - RABBITMQ_DEFAULT_USER=rabbitmquser
-      - RABBITMQ_DEFAULT_PASS=some_password
-    command: rabbitmq-server
-    volumes:
-      - ./rabbitmqdata:/var/lib/rabbitmq
+    image: rabbitmq:3.6.14-management
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    ports:
+    - "0.0.0.0:5672:5672"
+    - "0.0.0.0:15672:15672"
     container_name: rabbitmq

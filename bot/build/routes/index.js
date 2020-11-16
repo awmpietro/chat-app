@@ -37,8 +37,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var axios = require('axios');
 var crypto = require('crypto');
-var fs = require('fs');
 var csv = require('csv-parser');
+var _a = require('express'), Request = _a.Request, Response = _a.Response;
+var fs = require('fs');
+/*
+ * @function: getStock
+ * function that handles /get-stock request.
+ * @params: req: Request object, res: Response object.
+ */
 var getStock = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var stock, url, results;
     return __generator(this, function (_a) {
@@ -57,22 +63,22 @@ var getStock = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
                 .pipe(csv())
                 .on('data', function (data) { return results.push(data); })
                 .on('end', function () {
+                var mq = res.locals.mq;
                 if (results[0].Close === 'N/D') {
-                    return res.json({
+                    // queue the object
+                    mq.sendToQueue('jobs', JSON.stringify({
                         found: false,
                         stock: 'Stock not found',
-                    });
+                    }));
                 }
                 else {
                     var msg_1 = stock.toUpperCase() + " quote is $" + results[0].Close + " per share";
+                    // queue the object
+                    mq.sendToQueue('jobs', JSON.stringify({ found: true, stock: msg_1 }));
                     fs.unlink(fileName + ".csv", function (err) {
                         if (err) {
-                            res.status(500);
-                            res.json(err.message);
+                            console.log(err.message);
                         }
-                        // queue the object: PRODUCER
-                        var mq = res.locals.mq;
-                        mq.publish('', 'jobs', new Buffer(JSON.stringify({ found: true, stock: msg_1 })));
                         return res.json({ found: true, stock: msg_1 });
                     });
                 }

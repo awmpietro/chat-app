@@ -26,7 +26,7 @@ cd chat-app
 docker-compose up
 ```
 
-After building, You can access the app on [http://localhost:5000](http://localhost:5000).
+Wait for the full bulding. It first can take a while. After building, you gonna see the message in console: `INFO: Accepting connections at http://localhost:5000`. Now you can access the app on [http://localhost:5000](http://localhost:5000).
 
 - Server will run on `http://localhost:7070`; It will first run the tests before starting.
 - Bot will run on `http://localhost:6060`;

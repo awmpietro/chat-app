@@ -78,6 +78,9 @@ var Socket = /** @class */ (function () {
                 message: user.userName + " has joined the chat",
                 date: moment().format('MM/DD/YYYY HH:mm:ss'),
             }); // everybody but the client
+            _this.io.to(user.userRoom).emit('newUser', {
+                users: _this.users.roomUsers(user.userRoom),
+            });
         };
         /*
          * @method: message
@@ -135,6 +138,9 @@ var Socket = /** @class */ (function () {
                     },
                     message: leftUser.userName + " has left the chat",
                     date: moment().format('MM/DD/YY HH:mm:ss'),
+                });
+                _this.io.to(leftUser.userRoom).emit('newUser', {
+                    users: _this.users.roomUsers(leftUser.userRoom),
                 });
             }
         };

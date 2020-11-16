@@ -108,6 +108,9 @@ class Socket {
       message: `${user.userName} has joined the chat`,
       date: moment().format('MM/DD/YYYY HH:mm:ss'),
     }); // everybody but the client
+    this.io.to(user.userRoom).emit('newUser', {
+      users: this.users.roomUsers(user.userRoom),
+    });
   };
 
   /*
@@ -166,6 +169,9 @@ class Socket {
         },
         message: `${leftUser.userName} has left the chat`,
         date: moment().format('MM/DD/YY HH:mm:ss'),
+      });
+      this.io.to(leftUser.userRoom).emit('newUser', {
+        users: this.users.roomUsers(leftUser.userRoom),
       });
     }
   };

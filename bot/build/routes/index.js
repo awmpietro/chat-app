@@ -58,30 +58,27 @@ var getStock = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
         })
             .then(function (r) {
             var fileName = crypto.randomBytes(32).toString('hex');
-            r.data.pipe(fs.createWriteStream("./" + fileName + ".csv"));
-            fs.createReadStream("./" + fileName + ".csv")
-                .pipe(csv())
-                .on('data', function (data) { return results.push(data); })
-                .on('end', function () {
-                var mq = res.locals.mq;
-                if (results[0].Close === 'N/D') {
-                    // queue the object
-                    mq.sendToQueue('jobs', JSON.stringify({
-                        found: false,
-                        stock: 'Stock not found',
-                    }));
-                }
-                else {
-                    var msg_1 = stock.toUpperCase() + " quote is $" + results[0].Close + " per share";
-                    // queue the object
-                    mq.sendToQueue('jobs', JSON.stringify({ found: true, stock: msg_1 }));
-                    fs.unlink(fileName + ".csv", function (err) {
-                        if (err) {
-                            console.log(err.message);
-                        }
-                        return res.json({ found: true, stock: msg_1 });
-                    });
-                }
+            var readStream = r.data.pipe(fs.createWriteStream("./temp/" + fileName + ".csv"));
+            readStream.on('finish', function () {
+                fs.createReadStream("./temp/" + fileName + ".csv")
+                    .pipe(csv())
+                    .on('data', function (data) { return results.push(data); })
+                    .on('end', function () {
+                    var mq = res.locals.mq;
+                    if (results[0].Close === 'N/D') {
+                        // queue the object
+                        mq.sendToQueue('jobs', JSON.stringify({
+                            found: false,
+                            stock: 'Stock not found',
+                        }));
+                    }
+                    else {
+                        var msg = stock.toUpperCase() + " quote is $" + results[0].Close + " per share";
+                        // queue the object
+                        mq.sendToQueue('jobs', JSON.stringify({ found: true, stock: msg }));
+                        return res.json({ found: true, stock: msg });
+                    }
+                });
             });
         })
             .catch(function (err) {

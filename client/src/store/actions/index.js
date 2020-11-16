@@ -1,7 +1,14 @@
 import io from "socket.io-client";
 import axios from "axios";
 
-import { NEW_MESSAGE, LOGIN, REGISTER, LOGOUT, SIGN_ERROR } from "../types";
+import {
+  NEW_MESSAGE,
+  NEW_USER,
+  LOGIN,
+  REGISTER,
+  LOGOUT,
+  SIGN_ERROR,
+} from "../types";
 import Auth from "../../lib/JwtAuth";
 
 const URL = process.env.REACT_APP_SERVER_URL;
@@ -14,6 +21,9 @@ const socketHandle = user => {
 
     socket.on("newMessage", res => {
       dispatch(newMessage(res));
+    });
+    socket.on("newUser", res => {
+      dispatch(newUser(res));
     });
   };
 };
@@ -38,6 +48,15 @@ const newMessage = payload => {
         payload,
       });
     }
+  };
+};
+
+const newUser = payload => {
+  return dispatch => {
+    dispatch({
+      type: NEW_USER,
+      payload,
+    });
   };
 };
 

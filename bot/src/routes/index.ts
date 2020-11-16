@@ -23,39 +23,38 @@ const getStock = async (
     })
     .then((r: any) => {
       const fileName = crypto.randomBytes(32).toString('hex');
-      r.data.pipe(fs.createWriteStream(`./${fileName}.csv`));
-      fs.createReadStream(`./${fileName}.csv`)
-        .pipe(csv())
-        .on('data', (data: any) => results.push(data))
-        .on('end', () => {
-          const mq = res.locals.mq;
-          if (results[0].Close === 'N/D') {
-            // queue the object
-            mq.sendToQueue(
-              'jobs',
-              JSON.stringify({
-                found: false,
-                stock: 'Stock not found',
-              }),
-            );
-          } else {
-            const msg = `${stock.toUpperCase()} quote is \$${
-              results[0].Close
-            } per share`;
+      const readStream = r.data.pipe(
+        fs.createWriteStream(`./temp/${fileName}.csv`),
+      );
+      readStream.on('finish', () => {
+        fs.createReadStream(`./temp/${fileName}.csv`)
+          .pipe(csv())
+          .on('data', (data: any) => results.push(data))
+          .on('end', () => {
+            const mq = res.locals.mq;
+            if (results[0].Close === 'N/D') {
+              // queue the object
+              mq.sendToQueue(
+                'jobs',
+                JSON.stringify({
+                  found: false,
+                  stock: 'Stock not found',
+                }),
+              );
+            } else {
+              const msg = `${stock.toUpperCase()} quote is \$${
+                results[0].Close
+              } per share`;
 
-            // queue the object
-            mq.sendToQueue(
-              'jobs',
-              JSON.stringify({ found: true, stock: msg }),
-            );
-            fs.unlink(`${fileName}.csv`, (err: Error) => {
-              if (err) {
-                console.log(err.message);
-              }
+              // queue the object
+              mq.sendToQueue(
+                'jobs',
+                JSON.stringify({ found: true, stock: msg }),
+              );
               return res.json({ found: true, stock: msg });
-            });
-          }
-        });
+            }
+          });
+      });
     })
     .catch((err: Error) => {
       res.status(500);

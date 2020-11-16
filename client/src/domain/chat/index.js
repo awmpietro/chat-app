@@ -41,7 +41,11 @@ const Chat = props => {
           <h3>
             <i className="fas fa-users"></i> Users
           </h3>
-          <ul id="users"></ul>
+          <ul id="users">
+            {props.users.map(user => {
+              return <li key={user.userId}>{user.userName}</li>;
+            })}
+          </ul>
         </div>
         <div className="chat-messages">
           {props.messages.map(msg => {
@@ -65,8 +69,8 @@ const Chat = props => {
 };
 
 const mapStateToProps = state => {
-  const { messages, user, isSignedIn } = state.chat;
-  return { messages, user, isSignedIn };
+  const { messages, user, isSignedIn, users } = state.chat;
+  return { messages, user, isSignedIn, users };
 };
 
 export default connect(mapStateToProps, { chatMessage, logout })(Chat);

@@ -68,3 +68,9 @@ Server is also the **consumer** of the rabbitmq service.
 ### postgres
 
 **postgres** relational database used to store user's information.
+
+## Bonus:
+
+* Unit tests on server
+* More than 1 chatroom
+* Handling messages that are not understood

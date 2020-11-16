@@ -62,4 +62,4 @@ const getStock = async (
     });
 };
 
-module.exports = { getStock };
+export { getStock };

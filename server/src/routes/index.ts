@@ -85,4 +85,4 @@ const register = async (
   }
 };
 
-module.exports = { login, register };
+export { login, register };

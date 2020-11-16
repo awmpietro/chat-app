@@ -1,20 +1,20 @@
 export {};
-require('dotenv').config();
-const bodyParser = require('body-parser');
-const express = require('express');
-const { createServer, Server } = require('http');
+import 'dotenv/config';
+import bodyParser from 'body-parser';
+import express from 'express';
+import { createServer, Server } from 'http';
 
-const MySocket = require('./controllers/socket');
-const { login, register } = require('./routes');
+import Socket from './controllers/socket';
+import { login, register } from './routes';
 
 /*
  * @class: App
  * App is the main class, entry point of the application.
  */
 class App {
-  public app: any;
-  public server: typeof Server;
-  private socket: typeof MySocket;
+  public app: express.Application;
+  public server: any;
+  private socket: Socket;
   public PORT: any = process.env.PORT || 7070;
 
   /*
@@ -41,7 +41,7 @@ class App {
     });
     this.server = createServer(this.app);
     this.routesInit();
-    this.socket = new MySocket(this.server);
+    this.socket = new Socket(this.server);
   }
 
   /*

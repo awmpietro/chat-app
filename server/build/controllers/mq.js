@@ -48,4 +48,4 @@ var Mq = /** @class */ (function () {
     };
     return Mq;
 }());
-module.exports = Mq;
+exports.default = Mq;

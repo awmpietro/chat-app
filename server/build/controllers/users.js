@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * @class: Users
  * Users is responsible for handling users of the chat.
@@ -53,4 +54,4 @@ var Users = /** @class */ (function () {
     }
     return Users;
 }());
-module.exports = Users;
+exports.default = Users;

@@ -1,11 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var socketIo = require('socket.io');
-var moment = require('moment');
-var axios = require('axios');
-var jwt = require('jsonwebtoken');
-var Mq = require('./mq');
-var Users = require('./users');
+require("dotenv/config");
+var socket_io_1 = __importDefault(require("socket.io"));
+var moment_1 = __importDefault(require("moment"));
+var axios_1 = __importDefault(require("axios"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+var mq_1 = __importDefault(require("./mq"));
+var users_1 = __importDefault(require("./users"));
 /*
  * @class: Socket
  * Socket is responsible for managing socketio connections and exchangin messages throught websockets.
@@ -27,7 +31,7 @@ var Socket = /** @class */ (function () {
             _this.io
                 .use(function (socket, next) {
                 if (socket.handshake.query && socket.handshake.query.token) {
-                    jwt.verify(socket.handshake.query.token, process.env.SECRET_KEY, function (err, decoded) {
+                    jsonwebtoken_1.default.verify(socket.handshake.query.token, String(process.env.SECRET_KEY), function (err, decoded) {
                         if (err)
                             return next(new Error('Authentication error'));
                         socket.decoded = decoded;
@@ -67,7 +71,7 @@ var Socket = /** @class */ (function () {
                     userRoom: userRoom,
                 },
                 message: 'Welcome to Chat App',
-                date: moment().format('MM/DD/YY HH:mm:ss'),
+                date: moment_1.default().format('MM/DD/YY HH:mm:ss'),
             }); // only the client
             socket.broadcast.to(user.userRoom).emit('newMessage', {
                 user: {
@@ -76,7 +80,7 @@ var Socket = /** @class */ (function () {
                     userRoom: userRoom,
                 },
                 message: user.userName + " has joined the chat",
-                date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                date: moment_1.default().format('MM/DD/YYYY HH:mm:ss'),
             }); // everybody but the client
             _this.io.to(user.userRoom).emit('newUser', {
                 users: _this.users.roomUsers(user.userRoom),
@@ -92,7 +96,7 @@ var Socket = /** @class */ (function () {
             if (msg.msg.startsWith('/stock=')) {
                 var fmtMsg = msg.msg.split('=');
                 // Send to bot, bot will queue the message
-                axios
+                axios_1.default
                     .get(process.env.BOT_URL + "/get-stock?stock=" + fmtMsg[1])
                     .catch(function (error) {
                     console.log(error);
@@ -103,7 +107,7 @@ var Socket = /** @class */ (function () {
                     var message = {
                         user: user,
                         message: res.stock,
-                        date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                        date: moment_1.default().format('MM/DD/YYYY HH:mm:ss'),
                     };
                     if (res.found) {
                         _this.io.emit('newMessage', message);
@@ -117,7 +121,7 @@ var Socket = /** @class */ (function () {
                 var message = {
                     user: user,
                     message: msg.msg,
-                    date: moment().format('MM/DD/YYYY HH:mm:ss'),
+                    date: moment_1.default().format('MM/DD/YYYY HH:mm:ss'),
                 };
                 _this.io.emit('newMessage', message);
             }
@@ -137,24 +141,24 @@ var Socket = /** @class */ (function () {
                         userRoom: leftUser.userRoom,
                     },
                     message: leftUser.userName + " has left the chat",
-                    date: moment().format('MM/DD/YY HH:mm:ss'),
+                    date: moment_1.default().format('MM/DD/YY HH:mm:ss'),
                 });
                 _this.io.to(leftUser.userRoom).emit('newUser', {
                     users: _this.users.roomUsers(leftUser.userRoom),
                 });
             }
         };
-        this.io = socketIo(server, {
+        this.io = new socket_io_1.default.Server(server, {
             cors: {
                 origin: '*',
                 methods: ['GET', 'POST'],
                 credentials: true,
             },
         });
-        this.users = new Users();
-        this.mq = new Mq();
+        this.users = new users_1.default();
+        this.mq = new mq_1.default();
         this.socketInit();
     }
     return Socket;
 }());
-module.exports = Socket;
+exports.default = Socket;

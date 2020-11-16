@@ -46,4 +46,4 @@ class Mq {
   }
 }
 
-module.exports = Mq;
+export default Mq;

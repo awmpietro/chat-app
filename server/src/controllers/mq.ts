@@ -1,5 +1,3 @@
-export {};
-
 /*
  * @class: Mq
  * Mq is responsible for managing rabbit mq for the consumer/subscriber.
@@ -20,7 +18,7 @@ class Mq {
    * This method returns a Promise containing the rabbit mq communication's channel.
    * @params: channel: communication's channel created on connection, queue: queue name for subscribing
    */
-  createQueue(channel: any, queue: any) {
+  createQueue(channel: any, queue: string) {
     return new Promise((resolve: any, reject: any) => {
       try {
         channel.assertQueue(queue, { durable: true });
@@ -36,7 +34,7 @@ class Mq {
    * This method subscribes to a channel.
    * @params: queue: queue name for subscribing, callback: function to handle incoming message from queue
    */
-  consume(queue: string, callback: any) {
+  consume(queue: string, callback: Function) {
     this.connect()
       .then((channel: any) => this.createQueue(channel, queue))
       .then((channel: any) =>
@@ -46,4 +44,4 @@ class Mq {
   }
 }
 
-module.exports = Mq;
+export default Mq;

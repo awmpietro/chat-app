@@ -1,19 +1,19 @@
 export {};
-require('dotenv').config();
-const express = require('express');
-const { createServer, Server } = require('http');
-const Mq = require('./controllers/mq');
-const { getStock } = require('./routes');
+import 'dotenv/config';
+import express from 'express';
+import { createServer, Server } from 'http';
+import Mq from './controllers/mq';
+import { getStock } from './routes';
 
 /*
  * @class: App
  * App is the main class, entry point of the application.
  */
 class App {
-  public app: any;
-  public server: typeof Server;
+  public app: express.Application;
+  public server: any;
   public PORT: any = process.env.PORT || 6060;
-  private mq: typeof Mq;
+  private mq: Mq;
 
   /*
    * @method: constructor

@@ -1,11 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config();
-var bodyParser = require('body-parser');
-var express = require('express');
-var _a = require('http'), createServer = _a.createServer, Server = _a.Server;
-var MySocket = require('./controllers/socket');
-var _b = require('./routes'), login = _b.login, register = _b.register;
+require("dotenv/config");
+var body_parser_1 = __importDefault(require("body-parser"));
+var express_1 = __importDefault(require("express"));
+var http_1 = require("http");
+var socket_1 = __importDefault(require("./controllers/socket"));
+var routes_1 = require("./routes");
 /*
  * @class: App
  * App is the main class, entry point of the application.
@@ -17,10 +20,10 @@ var App = /** @class */ (function () {
      */
     function App() {
         this.PORT = process.env.PORT || 7070;
-        this.app = express();
+        this.app = express_1.default();
         this.app.disable('x-powered-by');
-        this.app.use(bodyParser.json());
-        this.app.use(bodyParser.urlencoded({ extended: false }));
+        this.app.use(body_parser_1.default.json());
+        this.app.use(body_parser_1.default.urlencoded({ extended: false }));
         this.app.use(function (req, res, next) {
             res.header('Access-Control-Allow-Origin', req.header('Origin'));
             res.header('Access-Control-Allow-Credentials', true);
@@ -28,17 +31,17 @@ var App = /** @class */ (function () {
             res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
             next();
         });
-        this.server = createServer(this.app);
+        this.server = http_1.createServer(this.app);
         this.routesInit();
-        this.socket = new MySocket(this.server);
+        this.socket = new socket_1.default(this.server);
     }
     /*
      * @method: routesInit
      * This method creates the routes of the application.
      */
     App.prototype.routesInit = function () {
-        this.app.route('/login').post(login);
-        this.app.route('/register').post(register);
+        this.app.route('/login').post(routes_1.login);
+        this.app.route('/register').post(routes_1.register);
     };
     return App;
 }());

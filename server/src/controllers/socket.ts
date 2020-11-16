@@ -1,28 +1,30 @@
 export {};
-const socketIo = require('socket.io');
-const moment = require('moment');
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const Mq = require('./mq');
+import 'dotenv/config';
+import socketIo from 'socket.io';
+import { Server } from 'http';
+import moment from 'moment';
+import axios from 'axios';
+import jwt from 'jsonwebtoken';
+import Mq from './mq';
 
-const Users = require('./users');
+import Users from './users';
 /*
  * @class: Socket
  * Socket is responsible for managing socketio connections and exchangin messages throught websockets.
  * @params: server: instance of the webserver created by Express.
  */
 class Socket {
-  private io: SocketIO.Server;
+  private io: socketIo.Server;
   private chatBotName: string = 'Chat App';
   public users: Users;
-  private mq: typeof Mq;
+  private mq: Mq;
 
   /*
    * @method: constructor
    * The constructor method handles all initializations needed when an object is instatiated.
    */
-  constructor(server: any) {
-    this.io = socketIo(server, {
+  constructor(server: Server) {
+    this.io = new socketIo.Server(server, {
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],
@@ -44,8 +46,8 @@ class Socket {
         if (socket.handshake.query && socket.handshake.query.token) {
           jwt.verify(
             socket.handshake.query.token,
-            process.env.SECRET_KEY,
-            (err: Error, decoded: any) => {
+            String(process.env.SECRET_KEY),
+            (err: any, decoded: any) => {
               if (err) return next(new Error('Authentication error'));
               socket.decoded = decoded;
               next();
@@ -177,4 +179,4 @@ class Socket {
   };
 }
 
-module.exports = Socket;
+export default Socket;

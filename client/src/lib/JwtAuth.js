@@ -1,7 +1,5 @@
 import decode from "jwt-decode";
 
-//  TODO: Implement serverside sesssions and remove local storage JWT Auth
-
 class JwtAuth {
   isSignedIn = () => {
     // Checks if there is a saved token and it's still valid
@@ -23,8 +21,6 @@ class JwtAuth {
   setToken = (token, userId, name) => {
     // Saves user token to localStorage
     localStorage.setItem("auth", token);
-    localStorage.setItem("userId", userId);
-    localStorage.setItem("name", name);
   };
 
   getToken = () => {
@@ -36,8 +32,6 @@ class JwtAuth {
   logout = () => {
     // Clear user token and profile data from localStorage
     localStorage.removeItem("auth");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("name");
   };
 
   getConfirm = () => {

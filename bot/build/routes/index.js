@@ -35,6 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getStock = void 0;
 var axios = require('axios');
 var crypto = require('crypto');
 var csv = require('csv-parser');
@@ -88,4 +90,4 @@ var getStock = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
         return [2 /*return*/];
     });
 }); };
-module.exports = { getStock: getStock };
+exports.getStock = getStock;

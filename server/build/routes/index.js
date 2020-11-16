@@ -35,6 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = exports.login = void 0;
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var _a = require('express'), Request = _a.Request, Response = _a.Response;
@@ -90,6 +92,7 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
         }
     });
 }); };
+exports.login = login;
 /*
  * @function: register
  * function that handles /register request.
@@ -134,4 +137,4 @@ var register = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
         }
     });
 }); };
-module.exports = { login: login, register: register };
+exports.register = register;

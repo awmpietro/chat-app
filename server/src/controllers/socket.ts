@@ -3,14 +3,24 @@ const socketIo = require('socket.io');
 const moment = require('moment');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const Mq = require('./mq');
 
 const Users = require('./users');
-
+/*
+ * @class: Socket
+ * Socket is responsible for managing socketio connections and exchangin messages throught websockets.
+ * @params: server: instance of the webserver created by Express.
+ */
 class Socket {
   private io: SocketIO.Server;
   private chatBotName: string = 'Chat App';
   public users: Users;
+  private mq: typeof Mq;
 
+  /*
+   * @method: constructor
+   * The constructor method handles all initializations needed when an object is instatiated.
+   */
   constructor(server: any) {
     this.io = socketIo(server, {
       cors: {
@@ -20,85 +30,14 @@ class Socket {
       },
     });
     this.users = new Users();
+    this.mq = new Mq();
     this.socketInit();
   }
 
-  joinRoom = (socket: any, userName: string, userRoom: string) => {
-    const user = this.users.userJoin(socket.id, userName, userRoom);
-    socket.join(user.userRoom);
-
-    socket.emit('newMessage', {
-      user: {
-        userId: socket.id,
-        userName: this.chatBotName,
-        userRoom,
-      },
-      message: 'Welcome to Chat App',
-      date: moment().format('MM/DD/YY HH:mm:ss'),
-    }); // only the client
-
-    socket.broadcast.to(user.userRoom).emit('newMessage', {
-      user: {
-        userId: socket.id,
-        userName: this.chatBotName,
-        userRoom,
-      },
-      message: `${user.userName} has joined the chat`,
-      date: moment().format('MM/DD/YYYY HH:mm:ss'),
-    }); // everybody but the client
-  };
-
-  message = async (socket: any, msg: any) => {
-    const user = this.users.getUser(socket.id);
-    if (msg.msg.startsWith('/stock=')) {
-      const fmtMsg: string[] = msg.msg.split('=');
-      try {
-        const results = await axios.get(
-          `${process.env.BOT_URL}/get-stock?stock=${fmtMsg[1]}`,
-        );
-        if (results.data.found) {
-          const message = {
-            user,
-            message: results.data.stock,
-            date: moment().format('MM/DD/YYYY HH:mm:ss'),
-          };
-          this.io.emit('newMessage', message); // everybody including client
-        } else {
-          const message = {
-            user,
-            message: results.data.stock,
-            date: moment().format('MM/DD/YYYY HH:mm:ss'),
-          };
-          socket.emit('newMessage', message); // only client
-        }
-      } catch (error) {
-        console.log(error.message);
-      }
-    } else {
-      const message = {
-        user,
-        message: msg.msg,
-        date: moment().format('MM/DD/YYYY HH:mm:ss'),
-      };
-      this.io.emit('newMessage', message); // everybody including client
-    }
-  };
-
-  disconnect = (socket: any) => {
-    const leftUser = this.users.userLeft(socket.id);
-    if (leftUser) {
-      this.io.to(leftUser.userRoom).emit('newMessage', {
-        user: {
-          userId: socket.id,
-          userName: this.chatBotName,
-          userRoom: leftUser.userRoom,
-        },
-        message: `${leftUser.userName} has left the chat`,
-        date: moment().format('MM/DD/YY HH:mm:ss'),
-      });
-    }
-  };
-
+  /*
+   * @method: socketInit
+   * This method creates the socket connection and listen to the socket events, routing to methods.
+   */
   socketInit = (): void => {
     this.io
       .use((socket: any, next: any) => {
@@ -139,6 +78,96 @@ class Socket {
           this.disconnect(socket);
         });
       });
+  };
+
+  /*
+   * @method: joinRoom
+   * This method is called when user first log into chat, and put the user in a room.
+   * @params: socket: instance of incoming socket, userName: name of the incoming user, userRoom: room of the incoming user
+   */
+  joinRoom = (socket: any, userName: string, userRoom: string) => {
+    const user = this.users.userJoin(socket.id, userName, userRoom);
+    socket.join(user.userRoom);
+
+    socket.emit('newMessage', {
+      user: {
+        userId: socket.id,
+        userName: this.chatBotName,
+        userRoom,
+      },
+      message: 'Welcome to Chat App',
+      date: moment().format('MM/DD/YY HH:mm:ss'),
+    }); // only the client
+
+    socket.broadcast.to(user.userRoom).emit('newMessage', {
+      user: {
+        userId: socket.id,
+        userName: this.chatBotName,
+        userRoom,
+      },
+      message: `${user.userName} has joined the chat`,
+      date: moment().format('MM/DD/YYYY HH:mm:ss'),
+    }); // everybody but the client
+  };
+
+  /*
+   * @method: message
+   * This method is called when an user emits a message.
+   * @params: socket: instance of incoming socket, msg: message to send in chat
+   */
+  message = (socket: any, msg: any) => {
+    const user = this.users.getUser(socket.id);
+    if (msg.msg.startsWith('/stock=')) {
+      const fmtMsg: string[] = msg.msg.split('=');
+      // Send to bot, bot will queue the message
+      axios
+        .get(`${process.env.BOT_URL}/get-stock?stock=${fmtMsg[1]}`)
+        .catch((error: Error) => {
+          console.log(error);
+        });
+
+      // Subscribe here  to receive stock messages from queue
+      this.mq.consume('jobs', (results: any) => {
+        const res = JSON.parse(results.content.toString());
+        const message = {
+          user,
+          message: res.stock,
+          date: moment().format('MM/DD/YYYY HH:mm:ss'),
+        };
+        if (res.found) {
+          this.io.emit('newMessage', message);
+        } else {
+          socket.emit('newMessage', message);
+        }
+      });
+    } else {
+      const message = {
+        user,
+        message: msg.msg,
+        date: moment().format('MM/DD/YYYY HH:mm:ss'),
+      };
+      this.io.emit('newMessage', message);
+    }
+  };
+
+  /*
+   * @method: disconnect
+   * This method is called when an user leaves the chat.
+   * @params: socket: instance of incoming socket.
+   */
+  disconnect = (socket: any) => {
+    const leftUser = this.users.userLeft(socket.id);
+    if (leftUser) {
+      this.io.to(leftUser.userRoom).emit('newMessage', {
+        user: {
+          userId: socket.id,
+          userName: this.chatBotName,
+          userRoom: leftUser.userRoom,
+        },
+        message: `${leftUser.userName} has left the chat`,
+        date: moment().format('MM/DD/YY HH:mm:ss'),
+      });
+    }
   };
 }
 

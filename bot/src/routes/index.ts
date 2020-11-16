@@ -1,9 +1,18 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const fs = require('fs');
 const csv = require('csv-parser');
+const { Request, Response } = require('express');
+const fs = require('fs');
 
-const getStock = (req: any, res: any) => {
+/*
+ * @function: getStock
+ * function that handles /get-stock request.
+ * @params: req: Request object, res: Response object.
+ */
+const getStock = async (
+  req: typeof Request,
+  res: typeof Response,
+) => {
   const stock = req.query.stock;
   const url = `https://stooq.com/q/l/?s=${stock}&f=sd2t2ohlcv&h&e=csv`;
   const results: any = [];
@@ -19,19 +28,29 @@ const getStock = (req: any, res: any) => {
         .pipe(csv())
         .on('data', (data: any) => results.push(data))
         .on('end', () => {
+          const mq = res.locals.mq;
           if (results[0].Close === 'N/D') {
-            return res.json({
-              found: false,
-              stock: 'Stock not found',
-            });
+            // queue the object
+            mq.sendToQueue(
+              'jobs',
+              JSON.stringify({
+                found: false,
+                stock: 'Stock not found',
+              }),
+            );
           } else {
             const msg = `${stock.toUpperCase()} quote is \$${
               results[0].Close
             } per share`;
+
+            // queue the object
+            mq.sendToQueue(
+              'jobs',
+              JSON.stringify({ found: true, stock: msg }),
+            );
             fs.unlink(`${fileName}.csv`, (err: Error) => {
               if (err) {
-                res.status(500);
-                res.json(err.message);
+                console.log(err.message);
               }
               return res.json({ found: true, stock: msg });
             });

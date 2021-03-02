@@ -1,7 +1,5 @@
 # Chat App
 
-This is a project for Jobsity coding test purposes
-
 [![](https://img.shields.io/badge/dependencies-docker-blue.svg)]()
 
 [![](https://img.shields.io/badge/node-%3E%3D12-green.svg)]()
